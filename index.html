@@ -1,156 +1,182 @@
 <!DOCTYPE html>
-<html>
-
-<head> 
-    
-
-
-    <meta charset=utf-8 />
-    <title>Lab 2 Tutorial</title>
-    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
-  integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-  crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
-  integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
-  crossorigin=""></script>
-
-    
+<html lang="en">
+<header>
+  <h1>US Renewable Electric Power Generation</h1>
+  <p>
+    This interactive web map visualizes proportional symbols sized by generating capacity (MW).
+    Use the layer control to compare Biomass, Geothermal, and Solar facilities across the United States.
+    Hover over a symbol to highlight it and click to view plant name and capacity details.
+  </p>
+</header>
 
 
-    <style>
-        
-  
-        
-         body {
-            margin: 0;
-            padding: 0;
-            background: whitesmoke;
-            font-family: Lato, sans-serif;
-            color: #0D0000;
-        }
-        header {
-            padding: 6px 10%;
-        }
-        h1 {
-            display: inline-block;
-            margin-right: 20px;
-            color: #001323;
-        }
-        h2 {
-            display: inline-block;
-            color: #001323;
-        }
-        #map {
-            width: 80%;
-            height: 540px;
-            margin: 10px auto;
-        }
-        footer {
-            padding: 6px 10%;
-            width: 80%;
-        }
-        p {
-            font-size: 1em;
-            color: #001323;
-        
-        }</style>
-    
-    
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
+  <style>
+    body { margin: 0; font-family: system-ui, Arial, sans-serif; }
+    header {
+      padding: 10px 14px;
+      border-bottom: 1px solid #ddd;
+      background: #fff;
+    }
+    header h1 { margin: 0; font-size: 18px; }
+    header p { margin: 4px 0 0; font-size: 13px; color: #444; }
+    #map { height: calc(100vh - 64px); width: 100%; }
+
+    .leaflet-control-layers label { font-size: 13px; }
+    .layer-dot {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: middle;
+      border: 1px solid #111;
+    }
+  </style>
 </head>
 
 <body>
-    <header>
-        <h1>Default</h1>
-        <h2>Default</h2>
+  <header>
+    <h1>US Electric Power Generation</h1>
+    <p>Compare Biomass, Geothermal, and Solar plants by capacity (MW). Click a circle for details.</p>
+  </header>
 
-        
-    </header>
+  <div id="map"></div>
 
-     <div id="map"></div> 
-    
-    
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <footer>
-        <p>Default</p>
-        <p>Default</p> 
-    </footer>
+  <!-- Data file (must be in same directory as this HTML file) -->
+  <script src="power-plants.js"></script>
 
-    
-    <script>
-    
-  
+  <script>
+    // -----------------------------
+    // MAP SETUP
+    // -----------------------------
+    const map = L.map("map").setView([39.5, -98.35], 4);
 
-       var mymap = L.map('map',  { 
-          center: [39.9526, -75.1652],
-          zoom: 7
-      });
-        
-       var mapLink = 
-            '<a href="http://openstreetmap.org">OpenStreetMap</a>'; // Different Base Map!
-       var tiles =     L.tileLayer(
-            'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; ' + mapLink + ' Contributors',
-            maxZoom: 18,
-            })
-        tiles.addTo(mymap); 
-    
-var wflatlon =
-    
-    {
-       Elkton: [39.6728081,-75.8695076],
-        Lancaster: [40.0380578,-76.2931562],
-        Dover: [39.6849628,-76.0576485]
-        
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+    function toNumber(x) {
+      const n = Number(x);
+      return Number.isFinite(n) ? n : null;
     }
 
-var wfpop = 
-    
-    {
-        Elkton: 15652,
-        Lancaster: 59708,
-        Dover: 37538
+    function fmtNumber(x) {
+      const n = toNumber(x);
+      return n === null ? "N/A" : n.toLocaleString();
     }
-        
 
-var circle = L.circle(wflatlon.Lancaster, {  
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.5,
-    radius: 20
-}).addTo(mymap);
-        
-        var circle1 = L.circle(wflatlon.Elkton, {  
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.5,
-    radius: 20
-}).addTo(mymap);
-        
+    // Step 2: Radius function (tuned for smaller outputs)
+    function getRadiusMW(mw) {
+      const n = toNumber(mw);
+      if (n === null || n <= 0) return 2;
+      // Adjust multiplier up/down if needed
+      return Math.sqrt(n) * 1.1;
+    }
 
-    
-function popRadius (pop){
-   var sr = Math.sqrt(pop)
-   var value = sr*100
-   return value
+    // -----------------------------
+    // DATA: your file defines `var plants = {...}`
+    // -----------------------------
+    if (typeof plants === "undefined") {
+      alert("plants is not defined. Make sure power-plants.js is in the same folder and loaded before this script.");
+      throw new Error("plants is not defined");
+    }
+
+    // Your data stores fuels inside: feature.properties.fuel_source (an object)
+    // Example: fuel_source: { "Solar": 120 }
+    function hasFuel(feature, fuelLabel) {
+      const fs = feature?.properties?.fuel_source;
+      return fs && Object.prototype.hasOwnProperty.call(fs, fuelLabel);
+    }
+
+    const colors = {
+      Biomass: "red",
+      Geothermal: "orange",
+      Solar: "gold"
+    };
+
+    // -----------------------------
+    // Step 3: Build 3 distinct layers
+    // (each with its own GeoJSON, filter, pointToLayer, onEachFeature)
+    // -----------------------------
+    function buildLayer(fuelLabel, color) {
+      return L.geoJSON(plants, {
+        filter: function(feature) {
+          return hasFuel(feature, fuelLabel);
+        },
+
+        pointToLayer: function(feature, latlng) {
+          const mw = feature.properties?.capacity_mw;
+          return L.circleMarker(latlng, {
+            radius: getRadiusMW(mw),
+            color: "#111",
+            weight: 1,
+            fillColor: color,
+            fillOpacity: 0.65
+          });
+        },
+
+       onEachFeature: function(feature, layer) {
+
+  const name = feature.properties.plant_name;
+  const mw = feature.properties.capacity_mw;
+
+  layer.bindPopup(
+    `<b>${name}</b><br>
+     Capacity: ${mw.toLocaleString()} MW`
+  );
+
+  // Hover highlight
+  layer.on("mouseover", function() {
+    layer.setStyle({ fillColor: "deepskyblue", fillOpacity: 0.85 });
+  });
+
+  layer.on("mouseout", function() {
+    layer.setStyle({ fillColor: color, fillOpacity: 0.65 });
+  });
+
 }
-var doverRadius = popRadius(wfpop.Dover);
 
-var circle2 = L.circle(wflatlon.Dover, {
-  color: 'red',
-  fillColor: '#f03',
-  fillOpacity: 0.5,
-  radius: doverRadius
-}).addTo(mymap);
+      });
+    }
 
+    // Create and add layers to map
+    const biomassLayer = buildLayer("Biomass", colors.Biomass).addTo(map);
+    const geothermalLayer = buildLayer("Geothermal", colors.Geothermal).addTo(map);
+    const solarLayer = buildLayer("Solar", colors.Solar).addTo(map);
 
-        
-    </script>
-    
+    // -----------------------------
+    // Step 4: Layer control (clickable legend) with colored labels
+    // -----------------------------
+    const overlays = {};
+    overlays[`<span class="layer-dot" style="background:${colors.Biomass}"></span>Biomass`] = biomassLayer;
+    overlays[`<span class="layer-dot" style="background:${colors.Geothermal}"></span>Geothermal`] = geothermalLayer;
+    overlays[`<span class="layer-dot" style="background:${colors.Solar}"></span>Solar`] = solarLayer;
+
+    L.control.layers(null, overlays, { collapsed: false }).addTo(map);
+
+    // Optional: zoom to visible data
+    try {
+      const group = L.featureGroup([biomassLayer, geothermalLayer, solarLayer]);
+      if (group.getLayers().length > 0) map.fitBounds(group.getBounds().pad(0.1));
+    } catch (e) {
+      console.warn("fitBounds skipped:", e);
+    }
+
+    // Debug sanity check (can delete after)
+    console.log("Counts:", {
+      Biomass: biomassLayer.getLayers().length,
+      Geothermal: geothermalLayer.getLayers().length,
+      Solar: solarLayer.getLayers().length
+    });
+  </script>
 </body>
-
 </html>
