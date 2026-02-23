@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+
+<head> 
+    
+
+
+    <meta charset=utf-8 />
+    <title>Lab 2 Tutorial</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+  integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+  crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+  integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+  crossorigin=""></script>
+
+    
+
+
+    <style>
+        
+  
+        
+         body {
+            margin: 0;
+            padding: 0;
+            background: whitesmoke;
+            font-family: Lato, sans-serif;
+            color: #0D0000;
+        }
+        header {
+            padding: 6px 10%;
+        }
+        h1 {
+            display: inline-block;
+            margin-right: 20px;
+            color: #001323;
+        }
+        h2 {
+            display: inline-block;
+            color: #001323;
+        }
+        #map {
+            width: 80%;
+            height: 540px;
+            margin: 10px auto;
+        }
+        footer {
+            padding: 6px 10%;
+            width: 80%;
+        }
+        p {
+            font-size: 1em;
+            color: #001323;
+        
+        }</style>
+    
+    
+
+</head>
+
+<body>
+    <header>
+        <h1>Default</h1>
+        <h2>Default</h2>
+
+        
+    </header>
+
+     <div id="map"></div> 
+    
+    
+
+    <footer>
+        <p>Default</p>
+        <p>Default</p> 
+    </footer>
+
+    
+    <script>
+    
+  
+
+       var mymap = L.map('map',  { 
+          center: [39.9526, -75.1652],
+          zoom: 7
+      });
+        
+       var mapLink = 
+            '<a href="http://openstreetmap.org">OpenStreetMap</a>'; // Different Base Map!
+       var tiles =     L.tileLayer(
+            'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; ' + mapLink + ' Contributors',
+            maxZoom: 18,
+            })
+        tiles.addTo(mymap); 
+    
+var wflatlon =
+    
+    {
+       Elkton: [39.6728081,-75.8695076],
+        Lancaster: [40.0380578,-76.2931562],
+        Dover: [39.6849628,-76.0576485]
+        
+    }
+
+var wfpop = 
+    
+    {
+        Elkton: 15652,
+        Lancaster: 59708,
+        Dover: 37538
+    }
+        
+
+var circle = L.circle(wflatlon.Lancaster, {  
+    color: 'red',
+    fillColor: '#f03',
+    fillOpacity: 0.5,
+    radius: 20
+}).addTo(mymap);
+        
+        var circle1 = L.circle(wflatlon.Elkton, {  
+    color: 'red',
+    fillColor: '#f03',
+    fillOpacity: 0.5,
+    radius: 20
+}).addTo(mymap);
+        
+
+    
+function popRadius (pop){
+   var sr = Math.sqrt(pop)
+   var value = sr*100
+   return value
+}
+var doverRadius = popRadius(wfpop.Dover);
+
+var circle2 = L.circle(wflatlon.Dover, {
+  color: 'red',
+  fillColor: '#f03',
+  fillOpacity: 0.5,
+  radius: doverRadius
+}).addTo(mymap);
+
+
+        
+    </script>
+    
+</body>
+
+</html>
